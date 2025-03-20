@@ -1,51 +1,44 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getAuth } from '@clerk/nextjs/server';
 
-// This function can be marked `async` if using `await` inside
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname
-
-  // Define public paths that don't require authentication
-  const isPublicPath =
-    path === "/" ||
-    path === "/login" ||
-    path === "/signup" ||
-    path === "/forgot-password" ||
-    path === "/reset-password" ||
-    path === "/pricing" ||
-    path === "/how-it-works" ||
-    path === "/podcasts" ||
-    path === "/terms" ||
-    path === "/privacy" ||
-    path.startsWith("/auth/")
-
-  // Get the auth token from cookies
-  const authToken = request.cookies.get("auth_token")?.value
-
-  // If the path is not public and there's no auth token, redirect to login
-  if (!isPublicPath && !authToken) {
-    return NextResponse.redirect(new URL("/login", request.url))
+export function middleware(req: NextRequest) {
+  const { userId } = getAuth(req);
+  const path = req.nextUrl.pathname;
+  
+  // Public routes accessible to all users
+  const publicRoutes = [
+    "/",
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/pricing",
+    "/how-it-works",
+    "/podcasts",
+    "/terms",
+    "/privacy",
+  ];
+  
+  // Check if the path is public
+  const isPublicRoute = publicRoutes.some(route => 
+    path === route || path.startsWith(`${route}/`)
+  );
+  
+  // If user is logged in and trying to access login/signup, redirect to dashboard
+  if (userId && (path === '/login' || path === '/signup')) {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
   }
-
-  // If the user is authenticated and trying to access login/signup, redirect to dashboard
-  if (authToken && (path === "/login" || path === "/signup")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url))
+  
+  // If path is not public and user is not logged in, redirect to login
+  if (!isPublicRoute && !userId) {
+    return NextResponse.redirect(new URL('/login', req.url));
   }
-
-  return NextResponse.next()
+  
+  return NextResponse.next();
 }
 
-// See "Matching Paths" below to learn more
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)",
-  ],
-}
-
+  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+};

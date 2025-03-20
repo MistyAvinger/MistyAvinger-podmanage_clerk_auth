@@ -10,13 +10,27 @@ import { Button } from "@/components/ui/button"
 import { Upload, BarChart2, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
 import confetti from "canvas-confetti"
+import { useAuth } from "@clerk/nextjs"
 
 export default function DashboardClientPage() {
   const router = useRouter()
+  const { isLoaded, isSignedIn, userId } = useAuth()
   const [greeting, setGreeting] = useState("")
   const [userName, setUserName] = useState("Podcaster")
   const [usedEpisodes, setUsedEpisodes] = useState(2)
   const [totalEpisodes, setTotalEpisodes] = useState(3)
+
+  // Add authentication check
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/login')
+    }
+  }, [isLoaded, isSignedIn, router])
+  
+  // Show loading state while checking auth
+  if (!isLoaded || !isSignedIn) {
+    return <div className="flex h-screen items-center justify-center">Loading dashboard...</div>
+  }
 
   // Calculate next cycle date (first day of next month)
   const nextCycleDate = new Date()
