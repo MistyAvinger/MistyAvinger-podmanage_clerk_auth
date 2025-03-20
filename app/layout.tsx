@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type React from "react";
-import { Inter, Poppins } from "next/font/google";
+import { Inter, Poppins } from 'next/font/google';
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
@@ -25,7 +25,12 @@ export const metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signInUrl="/login"
+      signUpUrl="/signup"
+      afterSignInUrl="/dashboard"
+      afterSignUpUrl="/dashboard"
+    >
       <html lang="en" suppressHydrationWarning className={`${inter.variable} ${poppins.variable}`}>
         <body className={inter.className}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
@@ -37,8 +42,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </ClerkProvider>
   );
 }
-
-
-
-
-import './globals.css'
